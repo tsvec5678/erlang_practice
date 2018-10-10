@@ -1,5 +1,10 @@
 -module(erl_prac).
--export([mqtt_handle_publish/1, mqtt_publish/2, ip_in_subnet/2, ip_in_subnet/3, ip_in_subnet_testing/0, trevor/0, ryan/0]). 
+-export([mqtt_handle_publish/1, mqtt_publish/2, 
+         ip_in_subnet/2, ip_in_subnet/3, ip_in_subnet_testing/0, trevor/0, ryan/0,
+         subscribe/1, notify/2,
+         start_test/0
+        ]). 
+ 
 
 -include_lib("emqttc/include/emqttc.hrl").
 
@@ -15,6 +20,24 @@ mqtt_handle_publish({publish,Topic,Payload}) ->
 
 mqtt_publish(Topic, Payload) ->
     ecpool:with_client(?EMQTTC_POOL, fun(C) -> emqttc:publish(C, Topic, Payload) end). 
+
+
+subscribe(EventType) ->
+    %% Gproc notation: {p, l, Name} Means {(p)roperty,(l)ocal, Name}
+    gproc:reg({p, l, {?MODULE, EventType}}).
+
+notify(EventType, Msg) ->
+    Key = {?MODULE, EventType},
+    gproc:send({p, l, Key}, {self(), Key, Msg}).
+
+
+
+start_test() -> 
+    receive
+        {connect, State} ->
+            lager:info("State is ~p", [State]),
+            ok
+    end.
 
 
 ip_in_subnet(IP, Subnet) when is_list(IP), is_list(Subnet) ->
@@ -64,20 +87,15 @@ f2(N,Term) when N > 0 ->
 
 ip_in_subnet_testing() -> 
 
-    IP1 = "throwerror",
-    SN1 = "192.168.7.244/24",
+    IP1 = "throwerror", SN1 = "192.168.7.244/24",
     
-    IP2 = "10.0.0.1",
-    SN2 = "10.0.0.0/24",
+    IP2 = "10.0.0.1",   SN2 = "10.0.0.0/24",
     
-    IP3 = "13.29.160.7",
-    SN3 = "13.16.0.0/16",
+    IP3 = "13.29.160.7", SN3 = "13.16.0.0/16",
     
-    IP4 = "192.168.7.173",
-    SN4 = "192.168.7.244/31",
+    IP4 = "192.168.7.173", SN4 = "192.168.7.244/31",
     
-    IP5 = "192.168.0.232",
-    SN5 = "192.168.0.233/32",
+    IP5 = "192.168.0.232", SN5 = "192.168.0.233/32",
     
     lager:info("IP: ~p, Subnet: ~p, IP on Subnet: ~p", [IP1, SN1, ip_in_subnet(IP1, SN1)]),
     lager:info("IP: ~p, Subnet: ~p, IP on Subnet: ~p", [IP2, SN2, ip_in_subnet(IP2, SN2)]),
