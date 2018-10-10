@@ -1,0 +1,19 @@
+{application, erl_prac,
+ [{description, "An OTP application"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, { erl_prac_app, []}},
+  {applications,
+   [kernel,
+    stdlib,
+    lager,
+    sync,
+    emqttc
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {maintainers, []},
+  {licenses, ["Apache 2.0"]},
+  {links, []}
+ ]}.
