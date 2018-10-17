@@ -2,7 +2,7 @@
 -export([mqtt_handle_publish/1, mqtt_publish/2, 
          ip_in_subnet/2, ip_in_subnet/3, ip_in_subnet_testing/0, trevor/0, ryan/0,
          subscribe/1, notify/2,
-         start_test/0
+         area/0, start_test/0
         ]). 
  
 
@@ -30,15 +30,36 @@ notify(EventType, Msg) ->
     Key = {?MODULE, EventType},
     gproc:send({p, l, Key}, {self(), Key, Msg}).
 
-
+area() -> 
+    gproc:reg({n, l, {?MODULE, 12345}}),
+    receive
+        {rectangle, W, H} ->
+            lager:info("rectangle radius: ~p", [W * H]);
+        {circle, R} ->
+            lager:info("circle radius: ~p", [3.14 * R * R]);
+        _ ->
+            io:format("can only calculate area of rectangles or circles.")
+    end,
+    area().
 
 start_test() -> 
-    receive
-        {connect, State} ->
-            lager:info("State is ~p", [State]),
-            ok
-    end.
+    %ClientPID = spawn(erl_prac, client_connect, []),
+    %lager:info("Client connected, PID: ~p", [ClientPID]),
 
+    lager:info("beam is updated but not displayed"),
+
+    UUID1 = {?MODULE, 12345},
+    UUID2 = {?MODULE, 0},
+
+
+    try  gproc:send({n, l, UUID1}, {circle, 100}) of
+        _ -> 
+            lager:info("UUID: ~p, Msg: ~p", [UUID1, sent])
+    catch
+       error:badarg ->
+            %%{badarg, caught, Badarg},
+            lager:info("Seid: ~p, does not exist", [UUID1])
+    end.
 
 ip_in_subnet(IP, Subnet) when is_list(IP), is_list(Subnet) ->
     
